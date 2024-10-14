@@ -6,63 +6,98 @@
     <title>Thirumala Drip Irrigation</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 20px;
+            background-color: #f4f4f9;
+            color: #333;
         }
-        header {
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+        .customer-details {
             display: flex;
             justify-content: space-between;
-            align-items: center;
             margin-bottom: 20px;
         }
-        header div {
+        .customer-details div {
             flex: 1;
             text-align: center;
         }
-        header div:first-child {
-            text-align: left;
-        }
-        header div:last-child {
-            text-align: right;
+        .customer-details input {
+            padding: 10px;
+            width: 80%;
+            border: 2px solid #2c3e50;
+            border-radius: 5px;
         }
         table {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 20px;
+            background-color: #fff;
         }
         table, th, td {
-            border: 1px solid black;
+            border: 1px solid #2c3e50;
         }
         th, td {
-            padding: 8px;
+            padding: 12px;
             text-align: center;
+        }
+        th {
+            background-color: #2980b9;
+            color: #fff;
         }
         #total-summary {
             text-align: right;
             margin-bottom: 20px;
+            font-weight: bold;
         }
         #actions {
             display: flex;
             justify-content: space-between;
+            margin-top: 10px;
         }
         .signature {
             margin-top: 40px;
+            text-align: left;
         }
-        #add-row, #remove-row, #print-button, #whatsapp-share {
-            margin: 5px;
-            padding: 10px;
+        button {
+            background-color: #2980b9;
+            color: #fff;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
             cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #21618c;
+        }
+        @media print {
+            #add-row, #remove-row, #print-button, #whatsapp-share {
+                display: none;
+            }
         }
     </style>
 </head>
 <body>
 
-    <header>
-        <div>Thirumala Drip Irrigation</div>
-        <div>Phone: <a href="tel:+1234567890">+1234567890</a></div>
-        <div>Date: <span id="current-date"></span></div>
-    </header>
+    <h1>Thirumala Drip Irrigation</h1>
+
+    <div class="customer-details">
+        <div>
+            Name: <input type="text" id="customer-name" placeholder="Enter Name">
+        </div>
+        <div>
+            Phone: <input type="tel" id="customer-phone" placeholder="Enter Phone Number">
+        </div>
+        <div>
+            Date: <span id="current-date"></span>
+        </div>
+    </div>
 
     <table id="items-table">
         <thead>
@@ -75,7 +110,16 @@
         </thead>
         <tbody>
             <tr>
-                <td><input type="text" placeholder="Item Name"></td>
+                <td>
+                    <input list="item-names" class="item-name" placeholder="Start typing item name">
+                    <datalist id="item-names">
+                        <option value="Drip Pipes">
+                        <option value="Sprinklers">
+                        <option value="Fittings">
+                        <option value="Valves">
+                        <option value="Filters">
+                    </datalist>
+                </td>
                 <td><input type="number" min="1" value="1" class="quantity"></td>
                 <td><input type="number" min="0.01" step="0.01" value="0" class="price"></td>
                 <td class="total-price">0</td>
@@ -84,9 +128,9 @@
     </table>
 
     <div id="total-summary">
-        <div>Total Items: <span id="total-items">1</span></div>
-        <div>Total Quantity: <span id="total-quantity">1</span></div>
-        <div>Total Cost: ₹<span id="total-cost">0</span></div>
+        Total Items: <span id="total-items">1</span> | 
+        Total Quantity: <span id="total-quantity">1</span> | 
+        Total Cost: ₹<span id="total-cost">0</span>
     </div>
 
     <div id="actions">
@@ -113,7 +157,9 @@
         document.getElementById("add-row").addEventListener("click", () => {
             const newRow = document.createElement("tr");
             newRow.innerHTML = `
-                <td><input type="text" placeholder="Item Name"></td>
+                <td>
+                    <input list="item-names" class="item-name" placeholder="Start typing item name">
+                </td>
                 <td><input type="number" min="1" value="1" class="quantity"></td>
                 <td><input type="number" min="0.01" step="0.01" value="0" class="price"></td>
                 <td class="total-price">0</td>

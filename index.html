@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thirumala Drip Irrigation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        header div {
+            flex: 1;
+            text-align: center;
+        }
+        header div:first-child {
+            text-align: left;
+        }
+        header div:last-child {
+            text-align: right;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 8px;
+            text-align: center;
+        }
+        #total-summary {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+        #actions {
+            display: flex;
+            justify-content: space-between;
+        }
+        .signature {
+            margin-top: 40px;
+        }
+        #add-row, #remove-row, #print-button, #whatsapp-share {
+            margin: 5px;
+            padding: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div>Thirumala Drip Irrigation</div>
+        <div>Phone: <a href="tel:+1234567890">+1234567890</a></div>
+        <div>Date: <span id="current-date"></span></div>
+    </header>
+
+    <table id="items-table">
+        <thead>
+            <tr>
+                <th>Items</th>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th>Total Price</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><input type="text" placeholder="Item Name"></td>
+                <td><input type="number" min="1" value="1" class="quantity"></td>
+                <td><input type="number" min="0.01" step="0.01" value="0" class="price"></td>
+                <td class="total-price">0</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div id="total-summary">
+        <div>Total Items: <span id="total-items">1</span></div>
+        <div>Total Quantity: <span id="total-quantity">1</span></div>
+        <div>Total Cost: ₹<span id="total-cost">0</span></div>
+    </div>
+
+    <div id="actions">
+        <button id="add-row">Add Row</button>
+        <button id="remove-row">Remove Row</button>
+    </div>
+
+    <div class="signature">
+        Signature: ________________________
+    </div>
+
+    <div id="actions">
+        <button id="print-button">Print</button>
+        <button id="whatsapp-share">Share on WhatsApp</button>
+    </div>
+
+    <script>
+        // Set current date
+        document.getElementById('current-date').textContent = new Date().toLocaleDateString();
+
+        const tableBody = document.querySelector("#items-table tbody");
+
+        // Add Row functionality
+        document.getElementById("add-row").addEventListener("click", () => {
+            const newRow = document.createElement("tr");
+            newRow.innerHTML = `
+                <td><input type="text" placeholder="Item Name"></td>
+                <td><input type="number" min="1" value="1" class="quantity"></td>
+                <td><input type="number" min="0.01" step="0.01" value="0" class="price"></td>
+                <td class="total-price">0</td>
+            `;
+            tableBody.appendChild(newRow);
+            updateTotals();
+        });
+
+        // Remove Row functionality
+        document.getElementById("remove-row").addEventListener("click", () => {
+            if (tableBody.rows.length > 1) {
+                tableBody.deleteRow(tableBody.rows.length - 1);
+                updateTotals();
+            }
+        });
+
+        // Update total quantity, items, and cost
+        function updateTotals() {
+            let totalItems = tableBody.rows.length;
+            let totalQuantity = 0;
+            let totalCost = 0;
+
+            Array.from(tableBody.rows).forEach(row => {
+                const quantity = parseFloat(row.querySelector(".quantity").value);
+                const price = parseFloat(row.querySelector(".price").value);
+                const totalPrice = quantity * price;
+                row.querySelector(".total-price").textContent = totalPrice.toFixed(2);
+
+                totalQuantity += quantity;
+                totalCost += totalPrice;
+            });
+
+            document.getElementById("total-items").textContent = totalItems;
+            document.getElementById("total-quantity").textContent = totalQuantity;
+            document.getElementById("total-cost").textContent = totalCost.toFixed(2);
+        }
+
+        // Event listener for input changes to update totals
+        tableBody.addEventListener("input", updateTotals);
+
+        // Print functionality
+        document.getElementById("print-button").addEventListener("click", () => {
+            window.print();
+        });
+
+        // Share on WhatsApp functionality
+        document.getElementById("whatsapp-share").addEventListener("click", () => {
+            const phoneNumber = "+1234567890";  // Replace with your phone number
+            const message = encodeURIComponent("Check out this bill from Thirumala Drip Irrigation");
+            const url = `https://wa.me/${phoneNumber}?text=${message}`;
+            window.open(url, "_blank");
+        });
+    </script>
+
+</body>
+</html>

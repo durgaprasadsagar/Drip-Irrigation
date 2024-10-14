@@ -28,10 +28,11 @@
             text-align: center;
         }
         .customer-details input {
-            padding: 10px;
-            width: 80%;
+            padding: 8px;
+            width: 60%;
             border: 2px solid #2c3e50;
             border-radius: 5px;
+            font-size: 16px;
         }
         table {
             width: 100%;
@@ -207,7 +208,11 @@
 
         // Share on WhatsApp functionality
         document.getElementById("whatsapp-share").addEventListener("click", () => {
-         // Replace with your phone number
+            const phoneNumber = document.getElementById("customer-phone").value;
+            if (!phoneNumber) {
+                alert("Please enter a phone number");
+                return;
+            }
             const message = encodeURIComponent("Check out this bill from Thirumala Drip Irrigation");
             const url = `https://wa.me/${phoneNumber}?text=${message}`;
             window.open(url, "_blank");

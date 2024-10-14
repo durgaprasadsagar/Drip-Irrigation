@@ -207,16 +207,54 @@
         });
 
         // Share on WhatsApp functionality
-        document.getElementById("whatsapp-share").addEventListener("click", () => {
-            const phoneNumber = document.getElementById("customer-phone").value;
-            if (!phoneNumber) {
-                alert("Please enter a phone number");
-                return;
-            }
-            const message = encodeURIComponent("Check out this bill from Thirumala Drip Irrigation");
-            const url = `https://wa.me/${phoneNumber}?text=${message}`;
-            window.open(url, "_blank");
+    // Function to generate WhatsApp message
+    function generateWhatsAppMessage() {
+        const shopName = "Thirumala Drip Irrigation";
+        const customerName = document.getElementById("customer-name").value;
+        const customerPhone = document.getElementById("customer-phone").value;
+        const currentDate = new Date().toLocaleDateString();
+
+        // Collect table data
+        let itemDetails = "";
+        const rows = document.querySelectorAll("#items-table tbody tr");
+        rows.forEach((row, index) => {
+            const itemName = row.querySelector('.item-name').value;
+            const quantity = row.querySelector('.quantity').value;
+            const price = row.querySelector('.price').value;
+            const totalPrice = row.querySelector('.total-price').textContent;
+
+            itemDetails += `${index + 1}. Item: ${itemName}, Quantity: ${quantity}, Price: ₹${price}, Total: ₹${totalPrice}\n`;
         });
+
+        const totalItems = document.getElementById("total-items").textContent;
+        const totalQuantity = document.getElementById("total-quantity").textContent;
+        const totalCost = document.getElementById("total-cost").textContent;
+
+        // Construct the message
+        let message = `*${shopName}*\n`;
+        message += `Customer Name: ${customerName}\n`;
+        message += `Phone Number: ${customerPhone}\n`;
+        message += `Date: ${currentDate}\n\n`;
+        message += `*Item Details:*\n${itemDetails}\n`;
+        message += `Total Items: ${totalItems}\n`;
+        message += `Total Quantity: ${totalQuantity}\n`;
+        message += `Total Cost: ₹${totalCost}\n`;
+
+        return encodeURIComponent(message);
+    }
+
+    // WhatsApp share button functionality
+    document.getElementById("whatsapp-share").addEventListener("click", () => {
+        const phoneNumber = document.getElementById("customer-phone").value;
+        if (!phoneNumber) {
+            alert("Please enter a phone number");
+            return;
+        }
+
+        const message = generateWhatsAppMessage();
+        const url = `https://wa.me/${phoneNumber}?text=${message}`;
+        window.open(url, "_blank");
+    });
     </script>
 
 </body>

@@ -4,42 +4,38 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Sri Thirumala Drip Irrigation — Invoice</title>
+
+  <!-- html2canvas + jsPDF (for client-side PDF generation) -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
   <style>
-    :root { --brand:#2980b9; --dark:#2c3e50; }
-    body {
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      background:#f4f4f9; color:#222; margin:0; padding:20px;
+    :root { --brand: #2980b9; --dark: #2c3e50; }
+    body { font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; background:#f4f4f9; color:#222; margin:0; padding:20px;}
+    header { text-align:center; margin-bottom:12px; }
+    header h1 { margin:0; color:var(--dark); font-size:26px; }
+    .top-row { display:flex; gap:12px; flex-wrap:wrap; justify-content:space-between; margin:12px 0; }
+    .field { flex:1; min-width:170px; text-align:center; }
+    .field input[type="text"], .field input[type="tel"] {
+      width:74%; padding:8px; border:2px solid var(--dark); border-radius:6px; font-size:14px;
     }
-    header { text-align:center; margin-bottom:18px; }
-    header h1 { margin:0; color:var(--dark); font-size:28px; }
-    .top-row { display:flex; gap:12px; flex-wrap:wrap; justify-content:space-between; margin:14px 0; }
-    .top-row .field { flex:1; min-width:170px; text-align:center; }
-    .top-row input[type="text"], .top-row input[type="tel"] {
-      width:72%; padding:8px; border:2px solid var(--dark); border-radius:6px; font-size:14px;
-    }
-    #invoice-area {
-      background:white; padding:16px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.06);
-    }
+    #invoice-area { background:white; padding:14px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
     table { width:100%; border-collapse:collapse; margin-top:12px; }
-    th, td { border:1px solid var(--dark); padding:10px; text-align:center; font-size:14px; }
+    th, td { border:1px solid var(--dark); padding:10px; text-align:center; font-size:14px; vertical-align:middle; }
     th { background:var(--brand); color:white; }
     input.quantity, input.price { width:70px; padding:6px; }
     input.item-name { width:95%; padding:6px; }
-    .action-btn { background:var(--brand); color:#fff; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; }
+    .action-btn { background:var(--brand); color:#fff; border:none; padding:10px 14px; border-radius:6px; cursor:pointer; }
     .action-btn:hover { background:#21618c; }
     .row-del { background:#e74c3c; border:none; color:white; padding:6px 8px; border-radius:6px; cursor:pointer; }
-    .row-del:hover { opacity:0.9; }
+    .row-del:hover { opacity:0.95; }
     #total-summary { text-align:right; margin-top:10px; font-weight:700; }
     #controls { display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; }
-    .history { margin-top:14px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-    select { padding:8px; border-radius:6px; border:1px solid #ccc; }
     @media print {
-      #controls, .history, #add-row, #save-invoice, #whatsapp-share { display:none !important; }
-      input, button { border:none !important; }
-      th:last-child, td:last-child { display:none !important; } /* Hide remove column */
-      input { outline:none; }
-      body { margin: 20px; background:white; }
-      .top-row input { border:none; }
+      #controls, .row-del { display:none !important; }
+      input { border:none !important; box-shadow:none !important; }
+      th:last-child, td:last-child { display:none !important; } /* hide Action column if somehow present */
+      body { background:white; margin:10mm; }
     }
   </style>
 </head>
@@ -47,37 +43,33 @@
 
   <header>
     <h1>Sri Thirumala Drip Irrigation</h1>
+    <div style="color:#666; font-size:13px; margin-top:6px;">Invoice — generate PDF & share via WhatsApp</div>
   </header>
 
   <div class="top-row">
-    <div class="field">Name:<br><input type="text" id="customer-name" placeholder="Enter customer name"></div>
-    <div class="field">Phone:<br><input type="tel" id="customer-phone" placeholder="Enter phone number"></div>
-    <div class="field">Invoice #:<br><input type="text" id="invoice-no"></div>
+    <div class="field">Name:<br><input type="text" id="customer-name" placeholder="Customer name"></div>
+    <div class="field">Phone:<br><input type="tel" id="customer-phone" placeholder="Phone number (digits only)"></div>
+    <div class="field">Invoice #:<br><input type="text" id="invoice-no" placeholder="Enter invoice number (required)"></div>
     <div class="field">Date:<br><span id="current-date"></span></div>
   </div>
 
-  <div id="invoice-area">
-    <table id="items-table">
+  <div id="invoice-area" aria-label="Invoice area">
+    <table id="items-table" aria-label="Items table">
       <thead>
         <tr>
-          <th style="width:40%;">Items</th>
+          <th style="width:46%;">Item</th>
           <th style="width:12%;">Quantity</th>
-          <th style="width:16%;">Price (₹)</th>
-          <th style="width:18%;">Total Price (₹)</th>
-          <th style="width:14%;">Action</th>
+          <th style="width:14%;">Price (₹)</th>
+          <th style="width:18%;">Total (₹)</th>
+          <th style="width:10%;">Action</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td>
-            <input list="item-names" class="item-name" placeholder="Start typing item name">
-            <datalist id="item-names">
-              <option value="Drip Pipes">
-              <option value="Sprinklers">
-              <option value="Fittings">
-              <option value="Valves">
-              <option value="Filters">
-            </datalist>
+          <td><input list="item-names" class="item-name" placeholder="Item name">
+              <datalist id="item-names">
+                <option value="Drip Pipes"><option value="Sprinklers"><option value="Fittings"><option value="Valves"><option value="Filters">
+              </datalist>
           </td>
           <td><input class="quantity" type="number" min="1" value="1"></td>
           <td><input class="price" type="number" min="0" step="0.01" value="0"></td>
@@ -93,108 +85,175 @@
       Total Cost: ₹<span id="total-cost">0.00</span>
     </div>
 
-    <div style="margin-top:18px;">Signature: ________________________</div>
+    <div style="margin-top:14px;">Signature: ________________________</div>
   </div>
 
   <div id="controls">
     <button id="add-row" class="action-btn">Add Row</button>
     <button id="print-button" class="action-btn">Print</button>
-    <button id="whatsapp-share" class="action-btn">Share on WhatsApp</button>
+    <button id="whatsapp-share" class="action-btn">Share on WhatsApp (auto PDF download)</button>
   </div>
 
-  <script>
-    document.getElementById('current-date').textContent = new Date().toLocaleDateString();
-    const tableBody = document.querySelector('#items-table tbody');
-    const invoiceNoEl = document.getElementById('invoice-no');
-    invoiceNoEl.value = 'INV-' + Date.now().toString().slice(-6);
+<script>
+  // small aliases for jspdf
+  const { jsPDF } = window.jspdf;
 
-    function updateTotals() {
-      const rows = Array.from(tableBody.rows);
-      let totalItems = rows.length, totalQty = 0, totalCost = 0;
-      rows.forEach(r => {
-        const q = parseFloat(r.querySelector('.quantity').value) || 0;
-        const p = parseFloat(r.querySelector('.price').value) || 0;
-        const t = q * p;
-        r.querySelector('.total-price').textContent = t.toFixed(2);
-        totalQty += q; totalCost += t;
-      });
-      document.getElementById('total-items').textContent = totalItems;
-      document.getElementById('total-quantity').textContent = totalQty;
-      document.getElementById('total-cost').textContent = totalCost.toFixed(2);
-    }
+  // init
+  document.getElementById('current-date').textContent = new Date().toLocaleDateString();
+  const tableBody = document.querySelector('#items-table tbody');
+
+  // totals
+  function updateTotals() {
+    const rows = Array.from(tableBody.rows);
+    let totalItems = rows.length, totalQty = 0, totalCost = 0;
+    rows.forEach(r => {
+      const q = parseFloat(r.querySelector('.quantity').value) || 0;
+      const p = parseFloat(r.querySelector('.price').value) || 0;
+      const t = q * p;
+      r.querySelector('.total-price').textContent = t.toFixed(2);
+      totalQty += q;
+      totalCost += t;
+    });
+    document.getElementById('total-items').textContent = totalItems;
+    document.getElementById('total-quantity').textContent = totalQty;
+    document.getElementById('total-cost').textContent = totalCost.toFixed(2);
+  }
+  updateTotals();
+
+  // add row
+  document.getElementById('add-row').addEventListener('click', () => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input list="item-names" class="item-name" placeholder="Item name"></td>
+      <td><input class="quantity" type="number" min="1" value="1"></td>
+      <td><input class="price" type="number" min="0" step="0.01" value="0"></td>
+      <td class="total-price">0.00</td>
+      <td><button class="row-del" title="Remove row">Remove</button></td>
+    `;
+    tableBody.appendChild(tr);
     updateTotals();
+  });
 
-    document.getElementById('add-row').addEventListener('click', () => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td><input list="item-names" class="item-name" placeholder="Start typing item name"></td>
-        <td><input class="quantity" type="number" min="1" value="1"></td>
-        <td><input class="price" type="number" min="0" step="0.01" value="0"></td>
-        <td class="total-price">0.00</td>
-        <td><button class="row-del">Remove</button></td>`;
-      tableBody.appendChild(tr);
-      updateTotals();
-    });
-
-    tableBody.addEventListener('click', e => {
-      if (e.target.classList.contains('row-del')) {
-        if (tableBody.rows.length > 1) e.target.closest('tr').remove();
-        else e.target.closest('tr').querySelectorAll('input').forEach(i=>i.value='');
-        updateTotals();
+  // remove row and input listener
+  tableBody.addEventListener('click', (e) => {
+    if (e.target.classList.contains('row-del')) {
+      if (tableBody.rows.length > 1) e.target.closest('tr').remove();
+      else {
+        // clear last row instead of removing
+        const r = e.target.closest('tr');
+        r.querySelector('.item-name').value = '';
+        r.querySelector('.quantity').value = 1;
+        r.querySelector('.price').value = 0;
       }
-    });
-    tableBody.addEventListener('input', updateTotals);
-
-    // Build printable invoice content
-    function buildPrintableHTML() {
-      const shop = "Sri Thirumala Drip Irrigation";
-      const name = document.getElementById('customer-name').value;
-      const phone = document.getElementById('customer-phone').value;
-      const inv = document.getElementById('invoice-no').value;
-      const date = document.getElementById('current-date').textContent;
-      let html = `
-        <h1 style="text-align:center;">${shop}</h1>
-        <p><strong>Customer:</strong> ${name} &nbsp;&nbsp; 
-           <strong>Phone:</strong> ${phone} &nbsp;&nbsp;
-           <strong>Invoice #:</strong> ${inv} &nbsp;&nbsp;
-           <strong>Date:</strong> ${date}</p>
-        <table style="width:100%; border-collapse:collapse;" border="1">
-          <thead><tr>
-            <th>Item</th><th>Qty</th><th>Price (₹)</th><th>Total (₹)</th>
-          </tr></thead><tbody>`;
-      Array.from(tableBody.rows).forEach(r=>{
-        const i=r.querySelector('.item-name').value;
-        const q=r.querySelector('.quantity').value;
-        const p=r.querySelector('.price').value;
-        const t=r.querySelector('.total-price').textContent;
-        html+=`<tr><td>${i}</td><td>${q}</td><td>${p}</td><td>${t}</td></tr>`;
-      });
-      const total=document.getElementById('total-cost').textContent;
-      html+=`</tbody></table><h3 style="text-align:right;">Total: ₹${total}</h3>`;
-      return html;
+      updateTotals();
     }
+  });
 
-    document.getElementById('print-button').addEventListener('click',()=>{
-      const html=buildPrintableHTML();
-      const w=window.open('','_blank');
-      w.document.write('<html><head><title>Invoice</title></head><body>'+html+'</body></html>');
-      w.document.close(); w.print();
-    });
+  tableBody.addEventListener('input', (e) => {
+    if (e.target.matches('.quantity') || e.target.matches('.price') || e.target.matches('.item-name')) {
+      updateTotals();
+    }
+  });
 
-    document.getElementById('whatsapp-share').addEventListener('click',()=>{
-      const phone=document.getElementById('customer-phone').value.trim();
-      if(!phone){alert('Enter phone number');return;}
-      const name=document.getElementById('customer-name').value;
-      const inv=document.getElementById('invoice-no').value;
-      const total=document.getElementById('total-cost').textContent;
-      const msg=`*Sri Thirumala Drip Irrigation*\nInvoice#: ${inv}\nCustomer: ${name}\nTotal: ₹${total}\n\nPlease find attached invoice PDF.`;
-      const url=`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
-      const html=buildPrintableHTML();
-      const w=window.open('','_blank');
-      w.document.write('<html><body>'+html+'</body></html>');
-      w.document.close(); w.print();
-      setTimeout(()=>window.open(url,'_blank'),800);
+  // Print: open a clean printable window (no action column)
+  function buildPrintableHTMLString() {
+    const shop = 'Sri Thirumala Drip Irrigation';
+    const name = escapeHtml(document.getElementById('customer-name').value || '');
+    const phone = escapeHtml(document.getElementById('customer-phone').value || '');
+    const invNo = escapeHtml(document.getElementById('invoice-no').value || '');
+    const date = escapeHtml(document.getElementById('current-date').textContent || '');
+    let html = `<div style="font-family:Arial, Helvetica, sans-serif; color:#222">`;
+    html += `<h1 style="text-align:center; margin:0 0 6px 0;">${shop}</h1>`;
+    html += `<div style="text-align:center; margin-bottom:12px; color:#555">Invoice</div>`;
+    html += `<div style="margin-bottom:8px;"><strong>Invoice #:</strong> ${invNo} &nbsp;&nbsp; <strong>Date:</strong> ${date}</div>`;
+    html += `<div style="margin-bottom:12px;"><strong>Customer:</strong> ${name} &nbsp;&nbsp; <strong>Phone:</strong> ${phone}</div>`;
+    html += `<table style="width:100%; border-collapse:collapse; font-size:12px;" border="1"><thead><tr>`;
+    html += `<th style="padding:8px;">Item</th><th style="padding:8px;">Qty</th><th style="padding:8px;">Price (₹)</th><th style="padding:8px;">Total (₹)</th>`;
+    html += `</tr></thead><tbody>`;
+    Array.from(tableBody.rows).forEach(r => {
+      const item = escapeHtml(r.querySelector('.item-name').value || '');
+      const qty = escapeHtml(r.querySelector('.quantity').value || '0');
+      const price = escapeHtml((parseFloat(r.querySelector('.price').value) || 0).toFixed(2));
+      const total = escapeHtml((parseFloat(r.querySelector('.total-price').textContent) || 0).toFixed(2));
+      html += `<tr><td style="padding:6px;">${item}</td><td style="padding:6px; text-align:center;">${qty}</td><td style="padding:6px; text-align:right;">${price}</td><td style="padding:6px; text-align:right;">${total}</td></tr>`;
     });
-  </script>
+    const grand = escapeHtml((parseFloat(document.getElementById('total-cost').textContent) || 0).toFixed(2));
+    html += `</tbody></table>`;
+    html += `<div style="text-align:right; font-weight:bold; margin-top:8px;">Total: ₹${grand}</div>`;
+    html += `<div style="margin-top:18px;">Signature: ________________________</div>`;
+    html += `</div>`;
+    return { html, invoiceNo: invNo || ('Invoice_' + Date.now()) };
+  }
+
+  document.getElementById('print-button').addEventListener('click', () => {
+    const { html } = buildPrintableHTMLString();
+    const w = window.open('', '_blank');
+    w.document.write(`<!doctype html><html><head><title>Invoice</title></head><body>${html}</body></html>`);
+    w.document.close();
+    w.onload = () => w.focus() || w.print();
+  });
+
+  // Share on WhatsApp: generate PDF client-side (without action column), download it, and open WhatsApp chat with message
+  document.getElementById('whatsapp-share').addEventListener('click', async () => {
+    // validations
+    const phoneRaw = document.getElementById('customer-phone').value.trim();
+    const invoiceNo = document.getElementById('invoice-no').value.trim();
+    if (!invoiceNo) { alert('Please enter Invoice Number before sharing.'); return; }
+    if (!phoneRaw) { if (!confirm('No phone number entered. Do you want to continue and open WhatsApp with no phone?')) { return; } }
+
+    // build printable HTML string
+    const { html, invoiceNo: downloadName } = buildPrintableHTMLString();
+
+    // create a container element (invisible) for rendering
+    const container = document.createElement('div');
+    container.style.width = '1000px'; // fixed render width for crispness
+    container.style.position = 'fixed';
+    container.style.left = '-9999px';
+    container.innerHTML = html;
+    document.body.appendChild(container);
+
+    try {
+      // use html2canvas to render element to canvas (scale for better quality)
+      const canvas = await html2canvas(container, { scale: 2, useCORS: true });
+      // create PDF using jsPDF
+      const pdf = new jsPDF({
+        orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
+        unit: 'px',
+        format: [canvas.width, canvas.height]
+      });
+      const imgData = canvas.toDataURL('image/png');
+      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+      const filename = `Invoice_${downloadName.replace(/\s+/g, '_')}.pdf`;
+
+      // trigger download
+      pdf.save(filename);
+
+      // prepare WhatsApp message
+      const shop = 'SRI THIRUMALA DRIP IRRIGATION';
+      const name = document.getElementById('customer-name').value.trim() || '-';
+      const total = document.getElementById('total-cost').textContent || '0.00';
+      const date = document.getElementById('current-date').textContent || '';
+      let msg = `${shop}\nInvoice #: ${invoiceNo}\nName: ${name}\nTotal: ₹${total}\nDate: ${date}\n\n📎 I have downloaded the invoice PDF as "${filename}". Please attach and send it with this message.`;
+
+      // open whatsapp chat (if phone present, it goes to that number; otherwise opens WhatsApp web with no number)
+      const waUrl = phoneRaw ? `https://wa.me/${encodeURIComponent(phoneRaw)}?text=${encodeURIComponent(msg)}` : `https://web.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
+      // open WA in new tab/window
+      window.open(waUrl, '_blank');
+
+    } catch (err) {
+      console.error('PDF generation failed', err);
+      alert('Failed to generate PDF. You can print using the Print button instead.');
+    } finally {
+      // clean up container
+      document.body.removeChild(container);
+    }
+  });
+
+  // small escape helper
+  function escapeHtml(s) {
+    if (s === undefined || s === null) return '';
+    return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
+  }
+</script>
 </body>
 </html>

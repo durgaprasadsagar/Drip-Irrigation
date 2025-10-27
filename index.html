@@ -1,125 +1,67 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sri Thirumala Drip Irrigation</title>
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sri Thirumala Drip Irrigation — Invoice</title>
   <style>
+    :root { --brand:#2980b9; --dark:#2c3e50; }
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      margin: 0;
-      padding: 20px;
-      background-color: #f4f4f9;
-      color: #333;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background:#f4f4f9; color:#222; margin:0; padding:20px;
     }
-    h1 {
-      text-align: center;
-      color: #2c3e50;
-      margin-bottom: 30px;
-      font-size: 2.5em;
+    header { text-align:center; margin-bottom:18px; }
+    header h1 { margin:0; color:var(--dark); font-size:28px; }
+    .top-row { display:flex; gap:12px; flex-wrap:wrap; justify-content:space-between; margin:14px 0; }
+    .top-row .field { flex:1; min-width:170px; text-align:center; }
+    .top-row input[type="text"], .top-row input[type="tel"] {
+      width:72%; padding:8px; border:2px solid var(--dark); border-radius:6px; font-size:14px;
     }
-    .customer-details {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-      gap: 10px;
+    #invoice-area {
+      background:white; padding:16px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.06);
     }
-    .customer-details div {
-      flex: 1;
-      text-align: center;
-    }
-    .customer-details input {
-      padding: 8px;
-      width: 60%;
-      border: 2px solid #2c3e50;
-      border-radius: 5px;
-      font-size: 16px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 20px;
-      background-color: #fff;
-    }
-    table, th, td {
-      border: 1px solid #2c3e50;
-    }
-    th, td {
-      padding: 12px;
-      text-align: center;
-    }
-    th {
-      background-color: #2980b9;
-      color: #fff;
-    }
-    #total-summary {
-      text-align: right;
-      margin-bottom: 20px;
-      font-weight: bold;
-    }
-    #actions {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 10px;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-    .signature {
-      margin-top: 40px;
-      text-align: left;
-    }
-    button {
-      background-color: #2980b9;
-      color: #fff;
-      border: none;
-      padding: 10px 15px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 16px;
-    }
-    button:hover {
-      background-color: #21618c;
-    }
+    table { width:100%; border-collapse:collapse; margin-top:12px; }
+    th, td { border:1px solid var(--dark); padding:10px; text-align:center; font-size:14px; }
+    th { background:var(--brand); color:white; }
+    input.quantity, input.price { width:70px; padding:6px; }
+    input.item-name { width:95%; padding:6px; }
+    .action-btn { background:var(--brand); color:#fff; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; }
+    .action-btn:hover { background:#21618c; }
+    .row-del { background:#e74c3c; border:none; color:white; padding:6px 8px; border-radius:6px; cursor:pointer; }
+    .row-del:hover { opacity:0.9; }
+    #total-summary { text-align:right; margin-top:10px; font-weight:700; }
+    #controls { display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; }
+    .history { margin-top:14px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    select { padding:8px; border-radius:6px; border:1px solid #ccc; }
     @media print {
-      #add-row, #print-button, #whatsapp-share {
-        display: none;
-      }
-      .remove-btn {
-        display: none;
-      }
+      #controls, .history, #add-row, #save-invoice, #whatsapp-share { display:none !important; }
+      body { margin: 0; }
     }
   </style>
 </head>
 <body>
 
-  <h1>Sri Thirumala Drip Irrigation</h1>
+  <header>
+    <h1>Sri Thirumala Drip Irrigation</h1>
+    <small style="color:#666">Simple invoice generator — save, load, print and share</small>
+  </header>
 
-  <div class="customer-details">
-    <div>
-      Name: <input type="text" id="customer-name" placeholder="Enter Name">
-    </div>
-    <div>
-      Phone: <input type="tel" id="customer-phone" placeholder="Enter Phone Number">
-    </div>
-    <div>
-      Invoice #: <input type="text" id="invoice-no" placeholder="Enter Invoice No.">
-    </div>
-    <div>
-      Date: <span id="current-date"></span>
-    </div>
+  <div class="top-row">
+    <div class="field">Name:<br><input type="text" id="customer-name" placeholder="Enter customer name"></div>
+    <div class="field">Phone:<br><input type="tel" id="customer-phone" placeholder="Enter phone number"></div>
+    <div class="field">Invoice #:<br><input type="text" id="invoice-no" placeholder="Invoice number"></div>
+    <div class="field">Date:<br><span id="current-date"></span></div>
   </div>
 
   <div id="invoice-area">
     <table id="items-table">
       <thead>
         <tr>
-          <th>Items</th>
-          <th>Quantity</th>
-          <th>Price</th>
-          <th>Total Price</th>
-          <th>Action</th>
+          <th style="width:40%;">Items</th>
+          <th style="width:12%;">Quantity</th>
+          <th style="width:16%;">Price (₹)</th>
+          <th style="width:18%;">Total Price (₹)</th>
+          <th style="width:14%;">Action</th>
         </tr>
       </thead>
       <tbody>
@@ -134,144 +76,296 @@
               <option value="Filters">
             </datalist>
           </td>
-          <td><input type="number" min="1" value="1" class="quantity"></td>
-          <td><input type="number" min="0.01" step="0.01" value="0" class="price"></td>
-          <td class="total-price">0</td>
-          <td><button class="remove-btn">🗑️</button></td>
+          <td><input class="quantity" type="number" min="1" value="1"></td>
+          <td><input class="price" type="number" min="0" step="0.01" value="0"></td>
+          <td class="total-price">0.00</td>
+          <td><button class="row-del" title="Remove row">Remove</button></td>
         </tr>
       </tbody>
     </table>
 
     <div id="total-summary">
-      Total Items: <span id="total-items">1</span> | 
-      Total Quantity: <span id="total-quantity">1</span> | 
-      Total Cost: ₹<span id="total-cost">0</span>
+      Total Items: <span id="total-items">1</span> |
+      Total Quantity: <span id="total-quantity">1</span> |
+      Total Cost: ₹<span id="total-cost">0.00</span>
     </div>
 
-    <div class="signature">
-      Signature: ________________________
-    </div>
+    <div style="margin-top:18px;">Signature: ________________________</div>
   </div>
 
-  <div id="actions">
-    <button id="add-row">Add Row</button>
-    <button id="print-button">Print</button>
-    <button id="whatsapp-share">Share on WhatsApp</button>
+  <div id="controls">
+    <button id="add-row" class="action-btn">Add Row</button>
+    <button id="save-invoice" class="action-btn">Save Invoice</button>
+    <button id="print-button" class="action-btn">Print</button>
+    <button id="whatsapp-share" class="action-btn">Share on WhatsApp</button>
   </div>
 
-  <script>
-    // Set current date
-    document.getElementById('current-date').textContent = new Date().toLocaleDateString();
+  <div class="history">
+    <label for="saved-list">Saved invoices:</label>
+    <select id="saved-list">
+      <option value="">-- none --</option>
+    </select>
+    <button id="load-invoice" class="action-btn">Load</button>
+    <button id="delete-invoice" class="action-btn" style="background:#c0392b">Delete</button>
+  </div>
 
-    const tableBody = document.querySelector("#items-table tbody");
+<script>
+  // --- Utilities & initial state
+  const dateEl = document.getElementById('current-date');
+  dateEl.textContent = new Date().toLocaleDateString();
 
-    function updateTotals() {
-      let totalItems = tableBody.rows.length;
-      let totalQuantity = 0;
-      let totalCost = 0;
+  const tableBody = document.querySelector('#items-table tbody');
+  const invoiceNoEl = document.getElementById('invoice-no');
+  // default invoice number
+  invoiceNoEl.value = 'INV-' + Date.now().toString().slice(-6);
 
-      Array.from(tableBody.rows).forEach(row => {
-        const quantity = parseFloat(row.querySelector(".quantity").value);
-        const price = parseFloat(row.querySelector(".price").value);
-        const totalPrice = quantity * price;
-        row.querySelector(".total-price").textContent = totalPrice.toFixed(2);
+  // load saved invoices into select
+  function loadSavedList() {
+    const select = document.getElementById('saved-list');
+    select.innerHTML = '<option value="">-- none --</option>';
+    const invoices = JSON.parse(localStorage.getItem('invoices') || '[]');
+    // sort descending by createdAt for convenience
+    invoices.sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+    invoices.forEach(inv => {
+      const opt = document.createElement('option');
+      opt.value = inv.invoiceNo;
+      opt.textContent = `${inv.invoiceNo} — ${inv.customerName || 'Unnamed'} — ₹${inv.totalCost || '0.00'}`;
+      select.appendChild(opt);
+    });
+  }
+  loadSavedList();
 
-        totalQuantity += quantity;
-        totalCost += totalPrice;
-      });
+  // --- Totals calculation
+  function updateTotals() {
+    const rows = Array.from(tableBody.rows);
+    let totalItems = rows.length;
+    let totalQty = 0;
+    let totalCost = 0;
+    rows.forEach(row => {
+      const q = parseFloat(row.querySelector('.quantity').value) || 0;
+      const p = parseFloat(row.querySelector('.price').value) || 0;
+      const t = q * p;
+      row.querySelector('.total-price').textContent = t.toFixed(2);
+      totalQty += q;
+      totalCost += t;
+    });
+    document.getElementById('total-items').textContent = totalItems;
+    document.getElementById('total-quantity').textContent = totalQty;
+    document.getElementById('total-cost').textContent = totalCost.toFixed(2);
+  }
 
-      document.getElementById("total-items").textContent = totalItems;
-      document.getElementById("total-quantity").textContent = totalQuantity;
-      document.getElementById("total-cost").textContent = totalCost.toFixed(2);
-    }
+  // initial totals
+  updateTotals();
 
-    // Add Row
-    document.getElementById("add-row").addEventListener("click", () => {
-      const newRow = document.createElement("tr");
-      newRow.innerHTML = `
-        <td><input list="item-names" class="item-name" placeholder="Start typing item name"></td>
-        <td><input type="number" min="1" value="1" class="quantity"></td>
-        <td><input type="number" min="0.01" step="0.01" value="0" class="price"></td>
-        <td class="total-price">0</td>
-        <td><button class="remove-btn">🗑️</button></td>
-      `;
-      tableBody.appendChild(newRow);
+  // --- Add Row
+  document.getElementById('add-row').addEventListener('click', () => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input list="item-names" class="item-name" placeholder="Start typing item name"></td>
+      <td><input class="quantity" type="number" min="1" value="1"></td>
+      <td><input class="price" type="number" min="0" step="0.01" value="0"></td>
+      <td class="total-price">0.00</td>
+      <td><button class="row-del" title="Remove row">Remove</button></td>
+    `;
+    tableBody.appendChild(tr);
+    updateTotals();
+  });
+
+  // --- Row delete and input change handling (event delegation)
+  tableBody.addEventListener('click', (ev) => {
+    if (ev.target.classList.contains('row-del')) {
+      // if last row, keep at least one row — allow deletion if more than 1 row
+      if (tableBody.rows.length > 1) {
+        ev.target.closest('tr').remove();
+      } else {
+        // clear values if last row
+        const r = ev.target.closest('tr');
+        r.querySelector('.item-name').value = '';
+        r.querySelector('.quantity').value = 1;
+        r.querySelector('.price').value = 0;
+      }
       updateTotals();
-    });
-
-    // Remove Row
-    tableBody.addEventListener("click", (e) => {
-      if (e.target.classList.contains("remove-btn")) {
-        e.target.closest("tr").remove();
-        updateTotals();
-      }
-    });
-
-    // Auto-update totals
-    tableBody.addEventListener("input", updateTotals);
-
-    // Print invoice
-    document.getElementById("print-button").addEventListener("click", () => {
-      window.print();
-    });
-
-    // WhatsApp message generation
-    function generateWhatsAppMessage() {
-      const shopName = "Sri Thirumala Drip Irrigation";
-      const customerName = document.getElementById("customer-name").value;
-      const customerPhone = document.getElementById("customer-phone").value;
-      const invoiceNo = document.getElementById("invoice-no").value;
-      const currentDate = new Date().toLocaleDateString();
-
-      let itemDetails = "";
-      const rows = document.querySelectorAll("#items-table tbody tr");
-      rows.forEach((row, index) => {
-        const itemName = row.querySelector('.item-name').value;
-        const quantity = row.querySelector('.quantity').value;
-        const price = row.querySelector('.price').value;
-        const totalPrice = row.querySelector('.total-price').textContent;
-
-        itemDetails += `${index + 1}. ${itemName} - Qty: ${quantity}, Price: ₹${price}, Total: ₹${totalPrice}\n`;
-      });
-
-      const totalItems = document.getElementById("total-items").textContent;
-      const totalQuantity = document.getElementById("total-quantity").textContent;
-      const totalCost = document.getElementById("total-cost").textContent;
-
-      let message = `*${shopName}*\nInvoice #: ${invoiceNo}\nCustomer: ${customerName}\nPhone: ${customerPhone}\nDate: ${currentDate}\n\n*Items:*\n${itemDetails}\nTotal Items: ${totalItems}\nTotal Quantity: ${totalQuantity}\nTotal Cost: ₹${totalCost}\n`;
-
-      return encodeURIComponent(message);
     }
+  });
 
-    // WhatsApp Share + Auto Download Image
-    document.getElementById("whatsapp-share").addEventListener("click", async () => {
-      const phoneNumber = document.getElementById("customer-phone").value;
-      if (!phoneNumber) {
-        alert("Please enter a phone number");
-        return;
-      }
+  tableBody.addEventListener('input', (ev) => {
+    if (ev.target.matches('.quantity') || ev.target.matches('.price') || ev.target.matches('.item-name')) {
+      updateTotals();
+    }
+  });
 
-      const message = generateWhatsAppMessage();
-      const invoiceNo = document.getElementById("invoice-no").value || "Invoice";
+  // --- Save Invoice to localStorage
+  function collectInvoiceObject() {
+    const rows = Array.from(tableBody.rows).map(r => ({
+      itemName: r.querySelector('.item-name').value || '',
+      quantity: parseFloat(r.querySelector('.quantity').value) || 0,
+      price: parseFloat(r.querySelector('.price').value) || 0,
+      total: parseFloat(r.querySelector('.total-price').textContent) || 0
+    }));
+    const totalCost = parseFloat(document.getElementById('total-cost').textContent) || 0;
+    const obj = {
+      invoiceNo: invoiceNoEl.value || ('INV-' + Date.now().toString().slice(-6)),
+      customerName: document.getElementById('customer-name').value || '',
+      customerPhone: document.getElementById('customer-phone').value || '',
+      date: dateEl.textContent,
+      rows,
+      totalCost,
+      createdAt: Date.now()
+    };
+    return obj;
+  }
 
-      // Capture invoice area
-      const invoiceArea = document.getElementById("invoice-area");
-      const canvas = await html2canvas(invoiceArea, { scale: 2 });
-      const imageData = canvas.toDataURL("image/png");
+  document.getElementById('save-invoice').addEventListener('click', () => {
+    const inv = collectInvoiceObject();
+    const invoices = JSON.parse(localStorage.getItem('invoices') || '[]');
+    // replace if same invoiceNo exists
+    const idx = invoices.findIndex(x => x.invoiceNo === inv.invoiceNo);
+    if (idx >= 0) invoices[idx] = inv; else invoices.push(inv);
+    localStorage.setItem('invoices', JSON.stringify(invoices));
+    loadSavedList();
+    alert(`Saved invoice ${inv.invoiceNo}`);
+  });
 
-      // Auto-download invoice image
-      const link = document.createElement('a');
-      link.href = imageData;
-      link.download = `${invoiceNo}.png`;
-      link.click();
-
-      // Open WhatsApp with message
-      const url = `https://wa.me/${phoneNumber}?text=${message}`;
-      window.open(url, "_blank");
+  // --- Load & Delete saved invoice
+  document.getElementById('load-invoice').addEventListener('click', () => {
+    const sel = document.getElementById('saved-list');
+    const invoiceNo = sel.value;
+    if (!invoiceNo) { alert('Select a saved invoice first'); return; }
+    const invoices = JSON.parse(localStorage.getItem('invoices') || '[]');
+    const inv = invoices.find(x => x.invoiceNo === invoiceNo);
+    if (!inv) { alert('Invoice not found'); loadSavedList(); return; }
+    // populate UI
+    document.getElementById('customer-name').value = inv.customerName || '';
+    document.getElementById('customer-phone').value = inv.customerPhone || '';
+    document.getElementById('invoice-no').value = inv.invoiceNo || '';
+    // rebuild rows
+    tableBody.innerHTML = '';
+    inv.rows.forEach(r => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><input list="item-names" class="item-name" value="${escapeHtml(r.itemName)}"></td>
+        <td><input class="quantity" type="number" min="1" value="${r.quantity}"></td>
+        <td><input class="price" type="number" min="0" step="0.01" value="${r.price}"></td>
+        <td class="total-price">${(r.total||0).toFixed(2)}</td>
+        <td><button class="row-del" title="Remove row">Remove</button></td>
+      `;
+      tableBody.appendChild(tr);
     });
+    updateTotals();
+    alert(`Loaded invoice ${inv.invoiceNo}`);
+  });
 
-    // Default invoice number
-    document.getElementById("invoice-no").value = "INV-" + Date.now().toString().slice(-6);
-  </script>
+  document.getElementById('delete-invoice').addEventListener('click', () => {
+    const sel = document.getElementById('saved-list');
+    const invoiceNo = sel.value;
+    if (!invoiceNo) { alert('Select a saved invoice to delete'); return; }
+    if (!confirm(`Delete invoice ${invoiceNo}? This action cannot be undone.`)) return;
+    let invoices = JSON.parse(localStorage.getItem('invoices') || '[]');
+    invoices = invoices.filter(x => x.invoiceNo !== invoiceNo);
+    localStorage.setItem('invoices', JSON.stringify(invoices));
+    loadSavedList();
+    alert(`Deleted invoice ${invoiceNo}`);
+  });
+
+  // --- Print function (opens new window with invoice-only view, auto-invokes print)
+  function openPrintWindowAndPrint(invoiceHtml, invoiceTitle = 'Invoice') {
+    const w = window.open('', '_blank');
+    const style = `
+      <style>
+        body{font-family:Arial, Helvetica, sans-serif; padding:20px; color:#222}
+        table{width:100%; border-collapse:collapse}
+        th,td{border:1px solid #222; padding:8px; text-align:center}
+        th{background:#2980b9; color:#fff}
+        h1{font-size:20px; text-align:center}
+      </style>
+    `;
+    w.document.write(`<!doctype html><html><head><title>${invoiceTitle}</title>${style}</head><body>${invoiceHtml}</body></html>`);
+    w.document.close();
+    // allow the new window to fully render then call print
+    w.onload = () => {
+      w.focus();
+      w.print();
+      // keep it open so user can save as PDF and attach; close automatically after a short wait is optional — we won't close to allow user control
+      // setTimeout(()=> w.close(), 2000); // optional close
+    };
+  }
+
+  // Build printable HTML from current invoice-area DOM
+  function buildPrintableHTML() {
+    const shopName = 'Sri Thirumala Drip Irrigation';
+    const name = escapeHtml(document.getElementById('customer-name').value || '');
+    const phone = escapeHtml(document.getElementById('customer-phone').value || '');
+    const invoiceNo = escapeHtml(document.getElementById('invoice-no').value || '');
+    const date = escapeHtml(dateEl.textContent);
+    let html = `<h1>${shopName}</h1>`;
+    html += `<div><strong>Invoice #:</strong> ${invoiceNo} &nbsp;&nbsp; <strong>Date:</strong> ${date}</div>`;
+    html += `<div><strong>Customer:</strong> ${name} &nbsp;&nbsp; <strong>Phone:</strong> ${phone}</div>`;
+    html += '<br>';
+    html += '<table><thead><tr><th>Item</th><th>Qty</th><th>Price (₹)</th><th>Total (₹)</th></tr></thead><tbody>';
+    Array.from(tableBody.rows).forEach(r => {
+      const item = escapeHtml(r.querySelector('.item-name').value || '');
+      const qty = (parseFloat(r.querySelector('.quantity').value) || 0);
+      const price = (parseFloat(r.querySelector('.price').value) || 0).toFixed(2);
+      const total = (parseFloat(r.querySelector('.total-price').textContent) || 0).toFixed(2);
+      html += `<tr><td>${item}</td><td>${qty}</td><td>${price}</td><td>${total}</td></tr>`;
+    });
+    const totalCost = (parseFloat(document.getElementById('total-cost').textContent) || 0).toFixed(2);
+    html += `</tbody></table><br><div style="text-align:right;font-weight:bold">Total: ₹${totalCost}</div><br><div>Signature: ____________________</div>`;
+    return html;
+  }
+
+  // --- WhatsApp share (Option B): open print first, then open WhatsApp chat with message instructing to attach the PDF
+  document.getElementById('whatsapp-share').addEventListener('click', () => {
+    const phone = document.getElementById('customer-phone').value.trim();
+    if (!phone) { alert('Please enter customer phone number first'); return; }
+
+    // Save invoice before sharing (so user has it in history)
+    const invObj = collectInvoiceObject();
+    let invoices = JSON.parse(localStorage.getItem('invoices') || '[]');
+    const idx = invoices.findIndex(x => x.invoiceNo === invObj.invoiceNo);
+    if (idx >= 0) invoices[idx] = invObj; else invoices.push(invObj);
+    localStorage.setItem('invoices', JSON.stringify(invoices));
+    loadSavedList();
+
+    // Build printable HTML and open print dialog in new window
+    const printable = buildPrintableHTML();
+    openPrintWindowAndPrint(printable, invObj.invoiceNo || 'Invoice');
+
+    // Prepare WhatsApp message instructing to attach the saved PDF
+    const shopName = 'SRI THIRUMALA DRIP IRRIGATION';
+    let msg = `${shopName}\nInvoice #: ${invObj.invoiceNo}\nCustomer: ${invObj.customerName}\nPhone: ${invObj.customerPhone}\nDate: ${invObj.date}\n\nItems:\n`;
+    invObj.rows.forEach((r, i) => {
+      msg += `${i+1}. ${r.itemName || '-'} — ${r.quantity} x ₹${(r.price||0).toFixed(2)} = ₹${(r.total||0).toFixed(2)}\n`;
+    });
+    msg += `\nTotal: ₹${(invObj.totalCost||0).toFixed(2)}\n\nPlease attach the PDF invoice (save as PDF from the print dialog) when sending this message.`;
+
+    const waUrl = `https://wa.me/${encodeURIComponent(phone)}?text=${encodeURIComponent(msg)}`;
+
+    // small delay so the print window has time to open before whatsapp opens
+    setTimeout(() => {
+      window.open(waUrl, '_blank');
+    }, 700); // 700ms is enough for most browsers; user can still manually re-open if needed
+  });
+
+  // --- Print button (manual)
+  document.getElementById('print-button').addEventListener('click', () => {
+    const printable = buildPrintableHTML();
+    openPrintWindowAndPrint(printable, invoiceNoEl.value || 'Invoice');
+  });
+
+  // --- Escape helper for safety when injecting values into printable HTML
+  function escapeHtml(s) {
+    if (!s && s !== 0) return '';
+    return String(s).replace(/[&<>"]/g, (c) => {
+      return {'&':'&amp;','<':'&lt;', '>':'&gt;', '"':'&quot;'}[c];
+    });
+  }
+
+  // Ensure totals reflect first load
+  updateTotals();
+
+  // Optional: when invoice number is changed to one that exists, auto-load? (we won't auto-load to avoid surprises)
+  // But we can show a small hint if invoice number already saved — omitted for clarity
+</script>
 </body>
 </html>

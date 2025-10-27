@@ -104,7 +104,7 @@
       Phone: <input type="tel" id="customer-phone" placeholder="Enter Phone Number">
     </div>
     <div>
-      Invoice #: <input type="text" id="invoice-no" value="" placeholder="Enter Invoice No.">
+      Invoice #: <input type="text" id="invoice-no" placeholder="Enter Invoice No.">
     </div>
     <div>
       Date: <span id="current-date"></span>
@@ -160,6 +160,7 @@
   </div>
 
   <script>
+    // Set current date
     document.getElementById('current-date').textContent = new Date().toLocaleDateString();
 
     const tableBody = document.querySelector("#items-table tbody");
@@ -198,7 +199,7 @@
       updateTotals();
     });
 
-    // Remove Row (per-row)
+    // Remove Row
     tableBody.addEventListener("click", (e) => {
       if (e.target.classList.contains("remove-btn")) {
         e.target.closest("tr").remove();
@@ -206,13 +207,15 @@
       }
     });
 
+    // Auto-update totals
     tableBody.addEventListener("input", updateTotals);
 
+    // Print invoice
     document.getElementById("print-button").addEventListener("click", () => {
       window.print();
     });
 
-    // Generate WhatsApp message
+    // WhatsApp message generation
     function generateWhatsAppMessage() {
       const shopName = "Sri Thirumala Drip Irrigation";
       const customerName = document.getElementById("customer-name").value;
@@ -240,7 +243,7 @@
       return encodeURIComponent(message);
     }
 
-    // Share invoice + screenshot on WhatsApp
+    // WhatsApp Share + Auto Download Image
     document.getElementById("whatsapp-share").addEventListener("click", async () => {
       const phoneNumber = document.getElementById("customer-phone").value;
       if (!phoneNumber) {
@@ -249,19 +252,22 @@
       }
 
       const message = generateWhatsAppMessage();
+      const invoiceNo = document.getElementById("invoice-no").value || "Invoice";
 
-      // Capture screenshot of the invoice area
+      // Capture invoice area
       const invoiceArea = document.getElementById("invoice-area");
       const canvas = await html2canvas(invoiceArea, { scale: 2 });
       const imageData = canvas.toDataURL("image/png");
 
-      // Open WhatsApp chat with message
+      // Auto-download invoice image
+      const link = document.createElement('a');
+      link.href = imageData;
+      link.download = `${invoiceNo}.png`;
+      link.click();
+
+      // Open WhatsApp with message
       const url = `https://wa.me/${phoneNumber}?text=${message}`;
       window.open(url, "_blank");
-
-      // Open screenshot in new tab for manual attachment (browser limitation)
-      const imgWindow = window.open("");
-      imgWindow.document.write(`<img src="${imageData}" style="width:100%">`);
     });
 
     // Default invoice number
